@@ -1,0 +1,17 @@
+# new virtual environment:
+python -m venv venv
+
+# activate virtual environment:
+.\venv\Scripts\activate
+
+# install dependencies:
+
+pip install matplotlib
+pip install eppy
+pip install boto3
+pip install numpy 
+pip install pandas
+pip install openpyxl
+pip install tqdm
+
+
