@@ -1,0 +1,404 @@
+import os
+import json
+from eppy.modeleditor import IDF
+from io import StringIO
+from multiprocessing import Pool, cpu_count
+from pathlib import Path
+import numpy as np
+from tqdm import tqdm 
+import boto3
+import time
+
+# paths & config
+
+# A2 BASE / 2050 (DE BILT BASE FILE)
+
+input_dir = Path(r"C:\Users\ahmed.alsalhi\emily\2A_adjacency_out\7_clean_jsons\clean_21")
+output_dir = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_out\2_idf_files\A2_base_2050\idf_21")
+log_file = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_out\2_idf_files\A2_base_2050\idf_log_21.txt")
+
+# keep same for each batch
+# A2 BASE / 2050 (DE BILT BASE FILE)
+
+idd_path = Path(r"C:\EnergyPlusV24-2-0\Energy+.idd")
+materials_file_path = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_out\1_materials\1_baseline.json")
+base_idf_path = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_generation\debilt_base_file_2050.idf")
+
+S3_BUCKET = ""  # e.g. "my-energyplus-idfs"
+OUTPUT_PREFIX = "idf_files"
+
+s3 = boto3.client("s3") if S3_BUCKET else None
+os.makedirs(output_dir, exist_ok=True)
+IDF.setiddname(idd_path)
+
+with open(base_idf_path, 'r') as f:
+    base_idf_str = f.read()
+with open(materials_file_path, 'r') as f:
+    material_defs = json.load(f)
+
+# HELPERS
+
+def make_vertices(coords):
+    return [(x, y, z) for x, y, z in coords]
+
+def save_idf(idf, filename):
+    if S3_BUCKET:
+        from tempfile import NamedTemporaryFile
+        with NamedTemporaryFile("w+", delete=False, suffix=".idf") as tmp:
+            idf.save(tmp.name)
+            tmp.flush()
+            s3.upload_file(tmp.name, S3_BUCKET, f"{OUTPUT_PREFIX}/{filename}")
+        print(f"uploaded to S3: {S3_BUCKET}/{OUTPUT_PREFIX}/{filename}")
+    else:
+        out_path = os.path.join(output_dir, filename)
+        idf.save(out_path)
+
+# WINDOW CONSTRUCTION
+def ensure_window_construction(idf, archetype_id, window_mat_id):
+    """
+    Make a CONSTRUCTION object that wraps the glazing material.
+    Returns the CONSTRUCTION name to use in the window surface.
+    """
+    cname = f"C_WIN_{archetype_id}"
+    existing = [c.Name.upper() for c in idf.idfobjects["CONSTRUCTION"]]
+    if cname.upper() not in existing:
+        idf.newidfobject("CONSTRUCTION", Name=cname, Outside_Layer=window_mat_id)
+    return cname
+
+# CORRECT EXPOSURE ON GROUND SURFACE / ADIBATIC WALLS
+
+def exposure_flags(outside_bc):
+    """
+    Return (sun_exp, wind_exp) strings suited for the boundary condition.
+    """
+    if outside_bc.lower() in ("ground", "adiabatic"):
+        return "NoSun", "NoWind"
+    return "SunExposed", "WindExposed"
+
+# DUAL SETPOINT
+def add_dualsetpoint_controltype_schedule(idf):
+    """
+    Creates the 'Control Type' limits and the
+    'DualSetpointControlType' schedule exactly once per IDF.
+    If they already exist the function does nothing.
+    """
+    lim_names = [obj.Name.upper() for obj in idf.idfobjects["SCHEDULETYPELIMITS"]]
+    if "CONTROL TYPE" not in lim_names:
+        idf.newidfobject(
+            "SCHEDULETYPELIMITS", Name="Control Type",
+            Lower_Limit_Value=0, Upper_Limit_Value=4, Numeric_Type="DISCRETE"
+        )
+
+    sched_names = [obj.Name.upper() for obj in idf.idfobjects["SCHEDULE:COMPACT"]]
+    if "DUALSETPOINTCONTROLTYPE" not in sched_names:
+        idf.newidfobject(
+            "SCHEDULE:COMPACT", Name="DualSetpointControlType",
+            Schedule_Type_Limits_Name="Control Type",
+            Field_1="Through: 12/31", Field_2="For: AllDays",
+            Field_3="Until: 24:00",  Field_4="4"
+        )
+
+
+def add_file_suppression_objects(idf):
+    """
+    Add an OUTPUTCONTROL:FILES object that disables every file
+    except the default *.err and the *.eso time-series file.
+    Call this once, right after you create the new `idf`.
+    """
+    if idf.idfobjects["OUTPUTCONTROL:FILES"]:
+        return
+
+    idf.newidfobject(
+        "OUTPUTCONTROL:FILES",
+        Output_CSV           = "No",
+        Output_MTR           = "No",
+        Output_ESO           = "Yes",
+        Output_EIO           = "No",
+        Output_Tabular       = "No",
+        Output_SQLite        = "No",
+        Output_JSON          = "No",
+        Output_AUDIT         = "No",
+        Output_Zone_Sizing   = "No",  
+        Output_System_Sizing = "No",  
+        Output_DXF           = "No",
+        Output_BND           = "No",
+        Output_RDD           = "No",
+        Output_MDD           = "No",
+        Output_MTD           = "No",
+        Output_END           = "No",
+        Output_SHD           = "No",
+        Output_DFS           = "No",
+        Output_GLHE          = "No",
+        Output_DelightIn     = "No",
+        Output_DelightELdmp  = "No",
+        Output_DelightDFdmp  = "No",
+        Output_EDD           = "No",
+        Output_DBG           = "No",
+        Output_PerfLog       = "No",
+        Output_SLN           = "No",
+        Output_SCI           = "No",
+        Output_WRL           = "No",
+        Output_Screen        = "No",
+        Output_ExtShd        = "No",
+        Output_Tarcog        = "No",
+    )
+
+
+
+
+
+
+def process_file(json_path):
+    try:
+        with open(json_path, 'r') as f:
+            surface_data = json.load(f)
+
+        for pand_id, entry in surface_data.items():
+            archetype_id = entry["Archetype ID"]
+            surfaces = entry["Surfaces"]
+            materials = material_defs.get(archetype_id, {}).get("Materials", [])
+
+            # Handles both 'NL.IMBAG.Pand.0599100000013049' and '0599100000013049'
+            pand_code = pand_id.split('.')[-1] if '.' in pand_id else pand_id
+            building_name = f"Pand.{pand_code}"
+            zone_name = f"Zone_{pand_code}"
+            
+
+            idf = IDF(StringIO(base_idf_str))
+            add_file_suppression_objects(idf)
+
+            for surf_type in ['G', 'F', 'R']:
+                mat_id = f"{surf_type}.{archetype_id}"
+                mat = next((m for m in materials if isinstance(m, dict) and m.get("Material ID") == mat_id), None)
+                if mat:
+                    idf.newidfobject("MATERIAL", Name=mat_id, Roughness=mat["Roughness"],
+                                     Thickness=mat["Thickness"], Conductivity=mat["Conductivity"],
+                                     Density=mat["Density"], Specific_Heat=mat["Specific Heat Capacity"],
+                                     Thermal_Absorptance=0.9, Solar_Absorptance=0.7)
+                    idf.newidfobject("CONSTRUCTION", Name=f"C_{surf_type}", Outside_Layer=mat_id)
+
+            # Ensure needed limits
+            existing_limits = [obj.Name.upper() for obj in idf.idfobjects["SCHEDULETYPELIMITS"]]
+            if "TEMPERATURE" not in existing_limits:
+                idf.newidfobject("SCHEDULETYPELIMITS", Name="Temperature", Lower_Limit_Value=-100,
+                                 Upper_Limit_Value=100, Numeric_Type="CONTINUOUS", Unit_Type="Temperature")
+            if "FRACTION" not in existing_limits:
+                idf.newidfobject("SCHEDULETYPELIMITS", Name="Fraction", Lower_Limit_Value=0,
+                                 Upper_Limit_Value=1, Numeric_Type="CONTINUOUS", Unit_Type="Dimensionless")
+
+            idf.newidfobject("SITE:GROUNDTEMPERATURE:BUILDINGSURFACE", **{f"{month}_Ground_Temperature": 18 for month in [
+                "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]})
+
+            idf.newidfobject("BUILDING", Name=building_name, North_Axis=0.0, Terrain="City",
+                             Loads_Convergence_Tolerance_Value=0.04,
+                             Temperature_Convergence_Tolerance_Value=0.4,
+                             Solar_Distribution="FullExterior", Maximum_Number_of_Warmup_Days=25)
+
+            idf.newidfobject("ZONE", Name=zone_name, Direction_of_Relative_North=0.0,
+                             X_Origin=0.0, Y_Origin=0.0, Z_Origin=0.0, Type=1, Multiplier=1,
+                             Ceiling_Height="Autocalculate", Volume="Autocalculate")
+
+            idf.newidfobject("HVACTEMPLATE:ZONE:IDEALLOADSAIRSYSTEM", Zone_Name=zone_name)
+
+            idf.newidfobject("SCHEDULE:COMPACT", Name=f"HeatingSetpoint_{zone_name}",
+                             Schedule_Type_Limits_Name="Temperature", Field_1="Through: 12/31",
+                             Field_2="For: AllDays", Field_3="Until: 24:00", Field_4="21.0")
+            idf.newidfobject("SCHEDULE:COMPACT", Name=f"CoolingSetpoint_{zone_name}",
+                             Schedule_Type_Limits_Name="Temperature", Field_1="Through: 12/31",
+                             Field_2="For: AllDays", Field_3="Until: 24:00", Field_4="24.0")
+
+            idf.newidfobject("THERMOSTATSETPOINT:DUALSETPOINT", Name=f"Thermostat_{zone_name}",
+                             Heating_Setpoint_Temperature_Schedule_Name=f"HeatingSetpoint_{zone_name}",
+                             Cooling_Setpoint_Temperature_Schedule_Name=f"CoolingSetpoint_{zone_name}")
+            
+            add_dualsetpoint_controltype_schedule(idf)
+
+            idf.newidfobject("ZONECONTROL:THERMOSTAT", Name=f"ThermostatControl_{zone_name}",
+                             Zone_or_ZoneList_Name=zone_name, Control_Type_Schedule_Name="DualSetpointControlType",
+                             Control_1_Object_Type="ThermostatSetpoint:DualSetpoint",
+                             Control_1_Name=f"Thermostat_{zone_name}")
+
+            
+            idf.newidfobject("SCHEDULE:COMPACT", Name="AlwaysOn", Schedule_Type_Limits_Name="Fraction",
+                             Field_1="Through: 12/31", Field_2="For: AllDays", Field_3="Until: 24:00", Field_4="1.0")
+
+            infiltration_qv = material_defs.get(archetype_id, {}).get("Infiltration", 0)
+            idf.newidfobject("ZONEINFILTRATION:DESIGNFLOWRATE", Name=f"Infil_{zone_name}",
+                             Zone_or_ZoneList_or_Space_or_SpaceList_Name=zone_name, Schedule_Name="AlwaysOn",
+                             Design_Flow_Rate_Calculation_Method="Flow/Area", Flow_Rate_per_Floor_Area=infiltration_qv)
+
+            # WINDOW OBJECTS 
+            
+            for mat in materials:
+                if "Window ID" in mat:
+                    idf.newidfobject("WINDOWMATERIAL:SIMPLEGLAZINGSYSTEM", Name=mat["Window ID"],
+                                     UFactor=mat["U_Factor"], Solar_Heat_Gain_Coefficient=mat["SHGC"],
+                                     Visible_Transmittance=0.6)
+
+
+            MIN_WALL_WIDTH = 1.5
+            MIN_WALL_HEIGHT = 1.5
+            aspect = 1.6  # Target aspect ratio (width:height)
+
+            for i, surface in enumerate(surfaces):
+                coords = surface["Coordinates"][0]  # outer ring only
+                coords_3d = [(x / 1000, y / 1000, z / 1000) for x, y, z in coords]
+                surface_type = surface["Type"]
+                surf_name = f"{surface_type}_{i}"
+                surf_map = {'G': 'Floor', 'R': 'Roof', 'F': 'Wall'}
+                bc_map = {'G': 'Ground', 'R': 'Outdoors', 'F': 'Outdoors'}
+                if surface_type not in surf_map:
+                    continue
+
+                outside_bc = bc_map[surface_type]
+                sun_exp, wind_exp = exposure_flags(outside_bc)
+
+                if surface_type == "F":
+                    boundary_cond = surface.get("BoundaryCondition", "EXPOSED")
+                    if boundary_cond.upper() == "ADIABATIC":
+                        outside_bc = "Adiabatic"
+                        sun_exp = "NoSun"
+                        wind_exp = "NoWind"
+
+                idf_surface = idf.newidfobject(
+                    "BUILDINGSURFACE:DETAILED",
+                    Name=surf_name,
+                    Surface_Type=surf_map[surface_type],
+                    Construction_Name=f"C_{surface_type}",
+                    Zone_Name=zone_name,
+                    Outside_Boundary_Condition=outside_bc,
+                    Sun_Exposure=sun_exp,
+                    Wind_Exposure=wind_exp,
+                    View_Factor_to_Ground=0.5,
+                    Number_of_Vertices=len(coords_3d)
+                )
+                for j, (x, y, z) in enumerate(coords_3d):
+                    idf_surface[f"Vertex_{j+1}_Xcoordinate"] = x
+                    idf_surface[f"Vertex_{j+1}_Ycoordinate"] = y
+                    idf_surface[f"Vertex_{j+1}_Zcoordinate"] = z
+
+                # --- Robust window creation logic ---
+                if (
+                    surface_type == "F"
+                    and surface.get("BoundaryCondition", "EXPOSED").upper() == "EXPOSED"
+                    and len(coords_3d) == 4
+                ):
+                    p = np.array(coords_3d)
+                    v1 = p[1] - p[0]
+                    v2 = p[3] - p[0]
+                    wall_width = np.linalg.norm(v1)
+                    wall_height = np.linalg.norm(v2)
+
+                    if wall_width >= MIN_WALL_WIDTH and wall_height >= MIN_WALL_HEIGHT:
+                        archetype_wwr = material_defs.get(archetype_id, {}).get("WWR", 0.4)  # fallback 0.4
+                        wall_area = wall_width * wall_height
+                        archetype_wwr = material_defs.get(archetype_id, {}).get("WWR", 0.4)  # fallback 0.4
+                        desired_win_area = wall_area * float(archetype_wwr)
+
+                        # Compute max window size for target aspect that fits wall
+                        max_win_width = wall_width - 1e-4
+                        max_win_height = wall_height - 1e-4
+
+                        # 1. Start with target aspect and desired area
+                        win_height = (desired_win_area / aspect) ** 0.5
+                        win_width = win_height * aspect
+
+                        # 2. Clamp to wall size, adjusting aspect dynamically if needed
+                        if win_width > max_win_width:
+                            win_width = max_win_width
+                            win_height = win_width / aspect
+                        if win_height > max_win_height:
+                            win_height = max_win_height
+                            win_width = win_height * aspect
+
+                        # 3. If window still doesn't fit, shrink both (lose aspect) to max possible WWR
+                        if win_width > max_win_width or win_height > max_win_height:
+                            scale = min(max_win_width / win_width, max_win_height / win_height)
+                            win_width *= scale
+                            win_height *= scale
+
+                        # 4. (Optional) recalculate actual window area and WWR
+                        actual_win_area = win_width * win_height
+                        final_wwr = actual_win_area / wall_area
+                        # print(f"Surface {surf_name}: Final WWR={final_wwr:.2f}, Aspect={win_width/win_height:.2f}")
+
+                        # 5. Center window in wall
+                        offset1 = 0.5 - win_width / (2 * wall_width)
+                        offset2 = 0.5 - win_height / (2 * wall_height)
+                        o = p[0] + offset1 * v1 + offset2 * v2
+                        win_p1 = o
+                        win_p2 = o + win_width * v1 / wall_width
+                        win_p3 = o + win_width * v1 / wall_width + win_height * v2 / wall_height
+                        win_p4 = o + win_height * v2 / wall_height
+                        window_vertices = [win_p1, win_p2, win_p3, win_p4]
+
+                        # --- Get window construction ---
+                        window_construction = None
+                        for mat in materials:
+                            if "Window ID" in mat:
+                                window_construction = mat["Window ID"]
+                        if not window_construction:
+                            window_construction = "W.TI.1946"  # fallback
+
+                        window_constr = ensure_window_construction(idf, archetype_id, window_construction)
+
+                        idf.newidfobject(
+                            "FENESTRATIONSURFACE:DETAILED",
+                            Name=f"WIN_{surf_name}",
+                            Surface_Type="Window",
+                            Construction_Name=window_constr,
+                            Building_Surface_Name=surf_name,
+                            Number_of_Vertices=4,
+                            Vertex_1_Xcoordinate=window_vertices[0][0],
+                            Vertex_1_Ycoordinate=window_vertices[0][1],
+                            Vertex_1_Zcoordinate=window_vertices[0][2],
+                            Vertex_2_Xcoordinate=window_vertices[1][0],
+                            Vertex_2_Ycoordinate=window_vertices[1][1],
+                            Vertex_2_Zcoordinate=window_vertices[1][2],
+                            Vertex_3_Xcoordinate=window_vertices[2][0],
+                            Vertex_3_Ycoordinate=window_vertices[2][1],
+                            Vertex_3_Zcoordinate=window_vertices[2][2],
+                            Vertex_4_Xcoordinate=window_vertices[3][0],
+                            Vertex_4_Ycoordinate=window_vertices[3][1],
+                            Vertex_4_Zcoordinate=window_vertices[3][2]
+                        )
+
+            # OUTPUTS
+
+            idf.newidfobject("OUTPUT:VARIABLE", Key_Value="*",
+                             Variable_Name="Zone Ideal Loads Supply Air Total Heating Energy",
+                             Reporting_Frequency="Hourly")
+            idf.newidfobject("OUTPUT:VARIABLE", Key_Value="*",
+                             Variable_Name="Zone Ideal Loads Supply Air Total Cooling Energy",
+                             Reporting_Frequency="Hourly")
+
+            save_idf(idf, f"{building_name}.idf")
+        return 1  # Success, one IDF written
+    except Exception as e:
+        print(f"Error writing IDF from {json_path}: {e}")
+        return 0  # Failure
+
+
+
+if __name__ == '__main__':
+    files = [os.path.join(input_dir, f) for f in os.listdir(input_dir) if f.endswith('.json')]
+    n_workers = max(1, cpu_count() - 1)
+    print(f"Processing {len(files)} files with {n_workers} workers...")
+
+    start_time = time.time()
+    with Pool(processes=n_workers) as pool:
+        results = list(tqdm(pool.imap_unordered(process_file, files), total=len(files)))
+    elapsed = time.time() - start_time
+
+    num_idfs = sum(results)
+    print(f"\nIDFs written to: {output_dir}")
+    print(f"Total IDFs created: {num_idfs}")
+    print(f"Total time: {elapsed:.1f} seconds ({elapsed/60:.2f} min)")
+
+    # Write log file
+    with open(log_file, "w") as f:
+        f.write(f"IDF generation summary\n")
+        f.write(f"Total IDFs created: {num_idfs}\n")
+        f.write(f"Total time: {elapsed:.1f} seconds ({elapsed/60:.2f} min)\n")
+
+    print(f"Log file written to: {log_file}")
