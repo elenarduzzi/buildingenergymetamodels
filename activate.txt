@@ -1,0 +1,32 @@
+# new virtual environment
+python -m venv venv
+
+# activate virtual environment
+.\venv\Scripts\activate
+
+# install dependencies
+pip install joblib
+pip install pandas
+pip install torch
+pip install scikit-learn
+pip install wandb
+pip install pylance
+pip install tqdm
+
+# if needed on computer 2 without admin privledges: run in powershell: 
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+
+# force login to weights and biases using api key 
+wandb login cd44b90c0509426f7cae2670146a4f50472c8adc
+
+wandb login --relogin
+
+# then reset terminal 
+
+######## 
+# to run the script without synching to wanb: 
+WANDB_MODE=offline python ann_0_add_error_metric.py
+
+WANDB_MODE=online python ann_0_add_error_metric.py
+
+
