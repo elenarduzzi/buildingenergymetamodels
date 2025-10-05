@@ -1,0 +1,19 @@
+# new virtual environment
+python -m venv venv
+
+# activate virtual environment
+.\venv\Scripts\activate
+
+# install dependencies
+pip install pylance
+pip install pandas
+pip install matplotlib
+pip install tqdm
+pip install dask
+pip install scikit-learn
+
+
+pip install openpyxl
+pip install dask 
+pip install pyarrow
+
