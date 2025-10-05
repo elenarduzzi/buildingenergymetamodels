@@ -20,8 +20,8 @@ For each input file, create a subfolder named after the file:
 C:\thesis\CLEAN_WORKFLOW\2B_adjacency_out\3_collect_neighbour_jsons\nb_jsons_6\0599100000013049_neighbour_ids\*.json
 
 Each output JSON file contains:
-• metadata
-• LoD 1.2 geometry and attributes.
+- metadata
+- LoD 1.2 geometry and attributes.
 
 Retries, batching, concurrency remain unchanged.
 Now also processes multiple input files concurrently.
@@ -44,7 +44,7 @@ from tenacity import (
 )
 from tqdm.asyncio import tqdm
 
-# ───────────────────────── inputs ──────────────────────────
+# inputs
 INPUT_FOLDER = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\1_nb_pands_ids\adj_jsons_21")
 OUTPUT_ROOT  = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\2_collect_neighbour_jsons\nb_jsons_21")
 LOG_DIR = OUTPUT_ROOT / "logs"; LOG_DIR.mkdir(parents=True, exist_ok=True)
@@ -59,12 +59,12 @@ MAX_CONCURRENT_FILES = 5   # limit how many input files are processed in paralle
 
 TIMEOUT_LOG = LOG_DIR / f"timed_out_{datetime.date.today()}.txt"
 
-# ───────────────────────── setup ───────────────────────────
+# setup
 
 s3       = boto3.client("s3")
 _timeout = aiohttp.ClientTimeout(total=TIMEOUT_S)
 
-# ─────────────────────── helpers ───────────────────────────
+# helpers
 
 def chunked(it: Iterable[str], n: int) -> Iterable[List[str]]:
     buf: List[str] = []
@@ -76,7 +76,7 @@ def chunked(it: Iterable[str], n: int) -> Iterable[List[str]]:
     if buf:
         yield buf
 
-# ─────────────────── network / IO layer ────────────────────
+#  network / IO layer
 
 @retry(
     stop=stop_after_attempt(MAX_RETRIES),
@@ -211,3 +211,4 @@ async def main() -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.ERROR, format="%(levelname)s:%(message)s")
     asyncio.run(main())
+
