@@ -16,7 +16,7 @@ OUTPUT_CSV = Path(r"C:\thesis\CLEAN_WORKFLOW\4_data_struct_out\4_merge_vertex\fl
 PAD = -1          # value for missing d / ux / uy slots
 DEC = 4           # decimal places to keep on real numbers
 
-#  1. peek at every file to learn the max column counts 
+#  check files to find max column counts 
 max_d = max_ux = max_uy = 0
 for fp in INPUT_FILES:
     cols = pd.read_csv(fp, nrows=0).columns
@@ -32,10 +32,10 @@ DIST_COLS = make_cols(max_d , "d")
 UX_COLS   = make_cols(max_ux, "ux")
 UY_COLS   = make_cols(max_uy, "uy")
 
-# ─── 2. read, pad, and store dfs ──────────────────────────────────
+# read, pad, and store dfs
 dfs = []
 for fp in tqdm(INPUT_FILES, desc="Padding files", unit="file"):
-    df = pd.read_csv(fp, dtype={"Pand ID": "string"})  # <- Ensures leading zeros are preserved
+    df = pd.read_csv(fp, dtype={"Pand ID": "string"})  # Ensures leading zeros are preserved
 
     # add any missing d / ux / uy cols with PAD value
     for c in DIST_COLS:
@@ -57,14 +57,14 @@ for fp in tqdm(INPUT_FILES, desc="Padding files", unit="file"):
     df = df[meta_cols + DIST_COLS + UX_COLS + UY_COLS]
     dfs.append(df)
 
-# ─── 3. concat all padded frames row-wise ─────────────────────────
+# concat all padded frames row-wise
 combined = pd.concat(dfs, ignore_index=True)
 
 # Ensure "Pand ID" is still a string before writing
 if "Pand ID" in combined.columns:
     combined["Pand ID"] = combined["Pand ID"].astype(str)
 
-# ─── 4. write out with progress bar ───────────────────────────────
+# write out with progress bar
 with tqdm(total=len(combined), desc="Writing rows", unit="row") as bar:
     combined.to_csv(OUTPUT_CSV, index=False)
     bar.update(len(combined))
