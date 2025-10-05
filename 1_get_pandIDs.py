@@ -21,8 +21,6 @@ from tenacity import (
 )
 from tqdm.asyncio import tqdm
 
-
-
 # batch files 
 # "0B_pand_arch_map_6.json"
 # "0B_pand_arch_map_7.json"
@@ -31,7 +29,7 @@ from tqdm.asyncio import tqdm
 
 # ADJUST ARCH_MAP_FILE, OUTPUT_DIR, lOG_DIR
 
-# ───────────────────────── inputs ──────────────────────────
+# paths
 ARCH_MAP_FILE = "0B_pand_arch_map_8.json"    # archetype
 OUTPUT_DIR = pathlib.Path("1B_pand_jsons_8")
 LOG_DIR = pathlib.Path("logs_8"); LOG_DIR.mkdir(exist_ok=True)                         
@@ -52,7 +50,7 @@ s3       = boto3.client("s3")
 _timeout = aiohttp.ClientTimeout(total=TIMEOUT_S)
 
 
-# ─────────────────────── helpers ──────────────────────────────
+# helpers
 def chunked(it: Iterable[Tuple[str, str]], n: int) -> Iterable[List[Tuple[str, str]]]:
     """Yield successive *n*-element lists from *it*."""
     buf: List[Tuple[str, str]] = []
@@ -65,7 +63,7 @@ def chunked(it: Iterable[Tuple[str, str]], n: int) -> Iterable[List[Tuple[str, s
         yield buf
 
 
-# ─────────────────── network / IO layer ─────────────────────────
+# network / IO layer 
 @retry(
     stop  = stop_after_attempt(MAX_RETRIES),
     wait  = wait_exponential(min=5, max=120),
@@ -153,7 +151,7 @@ async def fetch_one(pid: str, arche: str, session: aiohttp.ClientSession) -> Non
         (OUTPUT_DIR / key).write_bytes(data_bytes)
 
 
-# ----- simple wrapper that always gives (pid, exc) back ------------
+#  wrapper that always gives (pid, exc) back
 async def fetch_safe(
     pid: str,
     arche: str,
@@ -190,7 +188,7 @@ async def fetch_batch(
     return failed
 
 
-# ──────────────────────────── main ─────────────────────────────
+# main
 async def main() -> None:
     pand_to_arch: Dict[str, str] = json.load(open(ARCH_MAP_FILE))
 
@@ -212,3 +210,4 @@ async def main() -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.ERROR, format="%(levelname)s:%(message)s")
     asyncio.run(main())
+
