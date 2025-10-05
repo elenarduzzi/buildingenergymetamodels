@@ -9,7 +9,7 @@ from tqdm import tqdm
 import boto3
 import time
 
-# paths & config
+# paths
 
 # A2 BASE / 2050 (DE BILT BASE FILE)
 
@@ -273,7 +273,7 @@ def process_file(json_path):
                     idf_surface[f"Vertex_{j+1}_Ycoordinate"] = y
                     idf_surface[f"Vertex_{j+1}_Zcoordinate"] = z
 
-                # --- Robust window creation logic ---
+                # window creation
                 if (
                     surface_type == "F"
                     and surface.get("BoundaryCondition", "EXPOSED").upper() == "EXPOSED"
@@ -295,11 +295,11 @@ def process_file(json_path):
                         max_win_width = wall_width - 1e-4
                         max_win_height = wall_height - 1e-4
 
-                        # 1. Start with target aspect and desired area
+                        # 1. target aspect and desired area
                         win_height = (desired_win_area / aspect) ** 0.5
                         win_width = win_height * aspect
 
-                        # 2. Clamp to wall size, adjusting aspect dynamically if needed
+                        # 2. limit to wall size, adjusting aspect dynamically if needed
                         if win_width > max_win_width:
                             win_width = max_win_width
                             win_height = win_width / aspect
@@ -307,18 +307,18 @@ def process_file(json_path):
                             win_height = max_win_height
                             win_width = win_height * aspect
 
-                        # 3. If window still doesn't fit, shrink both (lose aspect) to max possible WWR
+                        # 3. window doesnt fit, shrink both (lose aspect) to max possible WWR
                         if win_width > max_win_width or win_height > max_win_height:
                             scale = min(max_win_width / win_width, max_win_height / win_height)
                             win_width *= scale
                             win_height *= scale
 
-                        # 4. (Optional) recalculate actual window area and WWR
+                        # 4. recalculate actual window area and WWR
                         actual_win_area = win_width * win_height
                         final_wwr = actual_win_area / wall_area
                         # print(f"Surface {surf_name}: Final WWR={final_wwr:.2f}, Aspect={win_width/win_height:.2f}")
 
-                        # 5. Center window in wall
+                        # 5. enter window in wall
                         offset1 = 0.5 - win_width / (2 * wall_width)
                         offset2 = 0.5 - win_height / (2 * wall_height)
                         o = p[0] + offset1 * v1 + offset2 * v2
@@ -328,7 +328,7 @@ def process_file(json_path):
                         win_p4 = o + win_height * v2 / wall_height
                         window_vertices = [win_p1, win_p2, win_p3, win_p4]
 
-                        # --- Get window construction ---
+                        # Get window construction
                         window_construction = None
                         for mat in materials:
                             if "Window ID" in mat:
@@ -399,3 +399,4 @@ if __name__ == '__main__':
 
 
     print(f"Log file written to: {log_file}")
+
