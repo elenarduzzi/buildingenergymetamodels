@@ -1,17 +1,19 @@
-# new virtual environment:
+# new virtual environment
 python -m venv venv
 
-# activate virtual environment:
+# activate virtual environment
 .\venv\Scripts\activate
 
-# install dependencies:
+# install dependencies
+
+pip install openpyxl 
+pip install aiohttp
+pip install tenacity
+pip install tqdm 
+pip install boto3
+pip install pylance
 
 pip install matplotlib
-pip install eppy
-pip install boto3
-pip install numpy 
-pip install pandas
-pip install openpyxl
-pip install tqdm
-
-
+pip install shapely 
+pip install rtree 
+pip install requests
