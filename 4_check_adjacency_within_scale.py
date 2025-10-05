@@ -1,7 +1,7 @@
 """
 Label each façade in a set of Pand JSONs as either
-    • "ADIABATIC"  – wall is shared with a neighbour, or
-    • "EXPOSED"    – wall is exposed to exterior.
+    - "ADIABATIC"  – wall is shared with a neighbour, or
+    - "EXPOSED"    – wall is exposed to exterior.
 
 New version:
 ~~~~~~~~~~~~
@@ -25,17 +25,17 @@ from shapely.geometry import LineString
 from rtree import index as rindex
 from tqdm import tqdm
 
-# ── I/O configuration ───────────────────────────────────────
+# files
 INPUT_ROOT = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\3_formatted_nb_surface_json\nb_format_jsons_21")
 OUTPUT_ROOT = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\4_label_adj_json\nb_type_jsons_21")
 OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
 
-# ── geometric thresholds ───────────────────────────────────────
+# geometric limits
 TOL2D   = 0.25   # m – max horizontal gap perceived as shared wall
-DOT_MIN = 0.95   #    – |dot(n1,n2)| ≥ DOT_MIN
+DOT_MIN = 0.95   #    – |dot(n1,n2)| >= DOT_MIN
 Z_OVL   = 0.5    #    – 50% vertical overlap
 
-# ── helper functions ─────────────────────────────────────
+# helper functions
 
 def bottom_edge_2d(surf: dict) -> LineString:
     ring = surf["Coordinates"][0]
@@ -122,7 +122,7 @@ def process_subfolder(subfolder: pathlib.Path):
     with ThreadPoolExecutor(max_workers=8) as pool:
         list(pool.map(label_and_write, all_files))
 
-# ── main ───────────────────────────────────────
+# main
 
 def main():
     subfolders = [f for f in INPUT_ROOT.iterdir() if f.is_dir()]
@@ -135,3 +135,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
