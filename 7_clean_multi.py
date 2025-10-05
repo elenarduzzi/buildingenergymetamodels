@@ -6,7 +6,7 @@ from pathlib import Path
 import re
 from concurrent.futures import ProcessPoolExecutor
 
-# Input and output directories
+# files
 input_dir = Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\6_transform_jsons\transform_8")
 output_dir = Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\7_clean_jsons\clean_8")
 
@@ -25,12 +25,12 @@ def clean_json_data(data):
         "Absolute Height (70%)"
     ]
     for pid, info in data.items():
-        # Remove prefix from Pand ID
+        # Rrmove prefix from Pand ID
         if "Pand ID" in info:
             match = re.search(r'(\d{16})', info["Pand ID"])
             if match:
                 info["Pand ID"] = match.group(1)
-        # Round values as before
+        # round values 
         for key in keys_to_round:
             if key in info and isinstance(info[key], float):
                 info[key] = round_float(info[key], 4)
@@ -61,3 +61,4 @@ if __name__ == "__main__":
             if result:
                 print(result)
     print("Cleaning, renaming, and copying complete.")
+
