@@ -13,7 +13,7 @@ B2_retro_2050
 B3_retro_2080
 """
 
-
+# paths
 INDEXES = [6, 7, 8, 21]
 ROOT_VERTEX = Path(r"C:\thesis\CLEAN_WORKFLOW\4_data_struct_out\0_vertex_jsons")
 ROOT_DEMAND = Path(r"C:\thesis\CLEAN_WORKFLOW\3_demand_out\B3_retro_2080")
@@ -77,7 +77,7 @@ def process_file(args):
     pand_id = str(building_data.get("Pand ID", "UNKNOWN"))
     pand_id_short = pand_id.split('.')[-1]
 
-    # Lookup with both short and full Pand ID
+    # handles short and full pand if name
     energy = energy_lookup.get(pand_id_short) or energy_lookup.get(pand_id)
     if not energy:
         return (pand_id_short, "No energy data")
@@ -121,3 +121,4 @@ if __name__ == "__main__":
             print(f"enrich_{idx}: No validation issues found.")
 
     print("All done.")
+
