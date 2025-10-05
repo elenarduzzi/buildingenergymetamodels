@@ -60,7 +60,7 @@ for fp in tqdm(INPUT_FILES, desc="Padding files", unit="file"):
 # concat all padded frames row-wise
 combined = pd.concat(dfs, ignore_index=True)
 
-# Ensure "Pand ID" is still a string before writing
+# ensure "Pand ID" is still a string before writing
 if "Pand ID" in combined.columns:
     combined["Pand ID"] = combined["Pand ID"].astype(str)
 
