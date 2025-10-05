@@ -29,7 +29,7 @@ retrofit_materials.csv
 
 """
 
-# Input/Output paths
+# paths
 INPUT_MAT  = Path(r"C:\thesis\CLEAN_WORKFLOW\2B_data_out\1_materials\2_retrofit_NI.json")
 OUTPUT_ROOT = Path(r"C:\thesis\CLEAN_WORKFLOW\4_data_struct_out\3_flatten_feat\B3_retro_2080")
 OUTPUT_MAT = OUTPUT_ROOT / "retrofit_materials.csv"
@@ -94,6 +94,7 @@ def flatten_materials(json_path: Path, csv_path: Path) -> None:
 
     print(f"Wrote {len(rows)} archetypes → {csv_path}")
 
-# Run it
+# run
 if __name__ == "__main__":
     flatten_materials(INPUT_MAT, OUTPUT_MAT)
+
