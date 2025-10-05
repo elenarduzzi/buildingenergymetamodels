@@ -6,34 +6,12 @@ python -m venv venv
 
 # install dependencies:
 
-pip install openpyxl 
 pip install matplotlib
-pip install shapely 
-pip install rtree 
-pip install numpy
-pip install tqdm 
-pip install pylance
-pip install requests
-pip install aiohttp
-pip install asyncio
+pip install eppy
 pip install boto3
-pip install tenacity
-# new virtual environment
-python -m venv venv
-
-# activate virtual environment
-.\venv\Scripts\activate
-
-# install dependencies
-pip install pylance
+pip install numpy 
 pip install pandas
-pip install matplotlib
-pip install tqdm
-pip install dask
-pip install scikit-learn
-
-
 pip install openpyxl
-pip install dask 
-pip install pyarrow
+pip install tqdm
+
 
