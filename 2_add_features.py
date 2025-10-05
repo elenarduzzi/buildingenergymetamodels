@@ -13,7 +13,7 @@ B2_retro_2050
 B3_retro_2080
 """
 
-# Root paths and indexes
+# paths
 ROOT_INPUT = Path(r"C:\thesis\CLEAN_WORKFLOW\4_data_struct_out\1_enrich_jsons\B3_retro_2080")
 ROOT_OUTPUT = Path(r"C:\thesis\CLEAN_WORKFLOW\4_data_struct_out\2_add_features\B3_retro_2080")
 INDEXES = [6, 7, 8, 21]
@@ -91,3 +91,4 @@ if __name__ == "__main__":
         print(f"Processing enrich_{idx} ...")
         process_folder(idx)
     print("All done.")
+
