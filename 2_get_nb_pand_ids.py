@@ -30,7 +30,7 @@ from shapely.geometry import Polygon
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 from tqdm.asyncio import tqdm
 
-# ── configuration ────────────────────────────────────────────────────────
+# inputs
 SOURCE_ROOT = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\0_surface_ADJ_sampled_20k")
 OUTPUT_ROOT = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\1_nb_pands_ids")
 OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
@@ -48,7 +48,7 @@ CONCURRENCY = 20  # parallel API calls
 RETRIES = 4  # tenacity retries
 BATCH_SIZE = 200  # number of JSON files per batch
 
-# ── helpers ─────────────────────────────────────────────────────────────
+# helpers
 
 def ground_polygon(bldg: dict) -> Polygon:
     """Return the ground surface (Type 'G') as a Shapely polygon."""
@@ -73,7 +73,7 @@ async def fetch_features(session: aiohttp.ClientSession, bbox_str: str) -> List[
 
 
 async def process_file(path: pathlib.Path, session: aiohttp.ClientSession, sem: asyncio.Semaphore) -> None:
-    """Handle a single JSON file → write neighbour‑ID list JSON."""
+    """Handle a single JSON file write neighbour‑ID list JSON."""
     async with sem:
         try:
             data = json.loads(path.read_text())
@@ -120,7 +120,7 @@ def chunked(it: List[pathlib.Path], n: int) -> List[List[pathlib.Path]]:
     return [it[i:i + n] for i in range(0, len(it), n)]
 
 
-# ── main orchestration ──────────────────────────────────────────────────
+# main
 
 async def main() -> None:
     json_paths: List[pathlib.Path] = []
@@ -144,3 +144,4 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+
