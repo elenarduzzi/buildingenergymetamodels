@@ -4,13 +4,16 @@ sampled ADJ folders, with asynchronous I/O, limited concurrency,
 batching, Tenacity retry with exponential backoff, and a `tqdm` progress bar.
 
 Folders scanned (relative to `SOURCE_ROOT`):
-    adj_jsons_6 | adj_jsons_7 | adj_jsons_8 | adj_jsons_21
+    adj_jsons_6
+    adj_jsons_7 
+    adj_jsons_8 
+    adj_jsons_21
 
 For each *.json file:
-    • buffer ground‑surface polygon by 0.5 m
-    • create bounding box from buffered polygon
-    • query 3DBAG `/collections/pand/items` for intersecting features
-    • write a neighbouring‑IDs list to the mirror location under
+    - buffer ground‑surface polygon by 0.5 m
+    - create bounding box from buffered polygon
+    - query 3DBAG `/collections/pand/items` for intersecting features
+    - write a neighbouring‑IDs list to the mirror location under
       `OUTPUT_ROOT`, keeping sub‑folder structure
 
 Example output file (per input PID):
@@ -144,4 +147,5 @@ async def main() -> None:
 
 if __name__ == "__main__":
     asyncio.run(main())
+
 
