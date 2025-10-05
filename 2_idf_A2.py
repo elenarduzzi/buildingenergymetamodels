@@ -13,16 +13,16 @@ import time
 
 # A2 BASE / 2050 (DE BILT BASE FILE)
 
-input_dir = Path(r"C:\Users\ahmed.alsalhi\emily\2A_adjacency_out\7_clean_jsons\clean_21")
-output_dir = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_out\2_idf_files\A2_base_2050\idf_21")
-log_file = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_out\2_idf_files\A2_base_2050\idf_log_21.txt")
+input_dir = Path(r"C:\Users\emily\2A_adjacency_out\7_clean_jsons\clean_21")
+output_dir = Path(r"C:\Users\emily\2B_data_out\2_idf_files\A2_base_2050\idf_21")
+log_file = Path(r"C:\Users\emily\2B_data_out\2_idf_files\A2_base_2050\idf_log_21.txt")
 
 # keep same for each batch
 # A2 BASE / 2050 (DE BILT BASE FILE)
 
 idd_path = Path(r"C:\EnergyPlusV24-2-0\Energy+.idd")
-materials_file_path = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_out\1_materials\1_baseline.json")
-base_idf_path = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_generation\debilt_base_file_2050.idf")
+materials_file_path = Path(r"C:\Users\emily\2B_data_out\1_materials\1_baseline.json")
+base_idf_path = Path(r"C:\Users\emily\2B_data_generation\debilt_base_file_2050.idf")
 
 S3_BUCKET = ""  # e.g. "my-energyplus-idfs"
 OUTPUT_PREFIX = "idf_files"
@@ -144,10 +144,6 @@ def add_file_suppression_objects(idf):
     )
 
 
-
-
-
-
 def process_file(json_path):
     try:
         with open(json_path, 'r') as f:
@@ -158,7 +154,7 @@ def process_file(json_path):
             surfaces = entry["Surfaces"]
             materials = material_defs.get(archetype_id, {}).get("Materials", [])
 
-            # Handles both 'NL.IMBAG.Pand.0599100000013049' and '0599100000013049'
+            # handles both 'NL.IMBAG.Pand.0599100000013049' and '0599100000013049'
             pand_code = pand_id.split('.')[-1] if '.' in pand_id else pand_id
             building_name = f"Pand.{pand_code}"
             zone_name = f"Zone_{pand_code}"
@@ -177,7 +173,7 @@ def process_file(json_path):
                                      Thermal_Absorptance=0.9, Solar_Absorptance=0.7)
                     idf.newidfobject("CONSTRUCTION", Name=f"C_{surf_type}", Outside_Layer=mat_id)
 
-            # Ensure needed limits
+            # ensure needed limits
             existing_limits = [obj.Name.upper() for obj in idf.idfobjects["SCHEDULETYPELIMITS"]]
             if "TEMPERATURE" not in existing_limits:
                 idf.newidfobject("SCHEDULETYPELIMITS", Name="Temperature", Lower_Limit_Value=-100,
@@ -238,7 +234,7 @@ def process_file(json_path):
 
             MIN_WALL_WIDTH = 1.5
             MIN_WALL_HEIGHT = 1.5
-            aspect = 1.6  # Target aspect ratio (width:height)
+            aspect = 1.6  # target aspect ratio (width:height)
 
             for i, surface in enumerate(surfaces):
                 coords = surface["Coordinates"][0]  # outer ring only
@@ -400,5 +396,6 @@ if __name__ == '__main__':
         f.write(f"IDF generation summary\n")
         f.write(f"Total IDFs created: {num_idfs}\n")
         f.write(f"Total time: {elapsed:.1f} seconds ({elapsed/60:.2f} min)\n")
+
 
     print(f"Log file written to: {log_file}")
