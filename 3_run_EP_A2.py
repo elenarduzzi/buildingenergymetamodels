@@ -5,13 +5,13 @@ from pathlib import Path
 #
 # A2 BASE / 2050 (DE BILT EPW)
 
-idf_folder   = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_out\2_idf_files\A2_base_2050\idf_21")
-output_root  = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_out\3_ep_sims\A2_base_2050\sims_21")
-log_file     = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_out\3_ep_sims\A2_base_2050\ep_log_21.txt")
+idf_folder   = Path(r"C:\Users\emily\2B_data_out\2_idf_files\A2_base_2050\idf_21")
+output_root  = Path(r"C:\Users\emily\2B_data_out\3_ep_sims\A2_base_2050\sims_21")
+log_file     = Path(r"C:\Users\emily\2B_data_out\3_ep_sims\A2_base_2050\ep_log_21.txt")
 
 # EPW 2050 DE BILT 
 
-epw_path     = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_generation\MET_DeBilt_TMY_2050.epw")
+epw_path     = Path(r"C:\Users\emily\2B_data_generation\MET_DeBilt_TMY_2050.epw")
 eplus_exe    = Path(r"C:\EnergyPlusV24-2-0\energyplus.exe")
 
 output_root.mkdir(parents=True, exist_ok=True)
@@ -82,3 +82,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
