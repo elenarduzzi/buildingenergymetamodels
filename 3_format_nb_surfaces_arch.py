@@ -106,7 +106,7 @@ def process_one(fp: pathlib.Path) -> None:
         out_fp = OUTPUT_ROOT / rel_path
         write_json(bldg, out_fp)
 
-# ── batch run with multi-threading ─────────────────────────────────────
+# batch run with multi-threading
 
 def main():
     all_files = list(INPUT_ROOT.rglob("*.json"))
@@ -119,3 +119,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
