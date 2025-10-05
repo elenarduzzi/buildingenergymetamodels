@@ -2,8 +2,8 @@
 SCALE THE COMBINED BASELINE + RETROFIT DATASET
 
 Reads train.csv / val.csv / test.csv, fits:
-  • Standard scaler on numeric feature columns
-  • Min-max scaler on the two target columns (Heating, Cooling)
+  - Standard scaler on numeric feature columns
+  - Min-max scaler on the two target columns (Heating, Cooling)
 
 Writes CSVs plus joblib scaler dictionaries.
 
@@ -48,7 +48,7 @@ STD_COLS = [
 ]
 TARGET_COLS = ["Annual Heating", "Annual Cooling"]
 
-# 1. Dynamically gather all temp_avg_* and rad_avg_* columns from the train set
+# Dynamically gather all temp_avg_* and rad_avg_* columns from the train set
 def get_const_cols(df):
     return [col for col in df.columns if col.startswith("temp_avg_") or col.startswith("rad_avg_")]
 
@@ -77,7 +77,6 @@ def standard_transform(s: pd.Series, mean: float, std: float):
     mask = out != -1
     out.loc[mask] = (out.loc[mask] - mean) / std
     return out
-
 
 # Minmax scaling (for targets)
 def fit_minmax_params(s: pd.Series):
@@ -124,7 +123,6 @@ OUT_TRAIN.parent.mkdir(parents=True, exist_ok=True)
 train_scaled.to_csv(OUT_TRAIN, index=False, na_rep="-1", float_format="%.4f")
 val_scaled.to_csv(OUT_VALIDATION, index=False, na_rep="-1", float_format="%.4f")
 test_scaled.to_csv(OUT_TEST, index=False, na_rep="-1", float_format="%.4f")
-
 
 print("\nDone.")
 print("Scaled train:     ", OUT_TRAIN)
