@@ -1,9 +1,6 @@
 import pandas as pd
 from pathlib import Path
 
-
-
-
 """"
 NLD_ZH_Rotterdam_TMY_2009-2023.epw
 A1_base_2020
@@ -25,14 +22,14 @@ B3_retro_2080
 
 """
 
-# Input & Output Paths
-epw_file = Path(r"C:\Users\ahmed.alsalhi\emily\2B_data_generation\MET_DeBilt_TMY_2080.epw")
-output_root = Path(r"C:\Users\ahmed.alsalhi\emily\4_structure_out\3_flatten_feat\B3_retro_2080")
+# paths
+epw_file = Path(r"C:\Users\emily\2B_data_generation\MET_DeBilt_TMY_2080.epw")
+output_root = Path(r"C:\Users\emily\4_structure_out\3_flatten_feat\B3_retro_2080")
 monthly_csv_out = output_root / "monthly_avgs.csv"
 
 output_root.mkdir(parents=True, exist_ok=True)
 
-# Field names (first 14 for relevant cols)
+# field names (first 14 for relevant cols)
 names = [
     "Year","Month","Day","Hour","Minute","DSU",   # 0-5
     "DryBulb",                                    # 6
@@ -40,10 +37,10 @@ names = [
     "ETR_H","ETR_DN","IR_Horz","GHI"
 ] + list(range(14, 35))
 
-# Read EPW (skip header)
+# read EPW (skip header)
 df = pd.read_csv(epw_file, skiprows=8, header=None, names=names, usecols=["Year", "Month", "Day", "DryBulb", "GHI"])
 
-# Calculate daily averages
+# calculate daily averages
 df["date"] = pd.to_datetime(df[["Year", "Month", "Day"]])
 daily = (
     df.groupby(["Year", "Month", "Day"])
@@ -52,7 +49,7 @@ daily = (
       .reset_index()
 )
 
-# Calculate monthly averages per year
+# calculate monthly averages per year
 monthly = (
     daily.groupby(["Year", "Month"])
          .agg(temp_avg=("temp_avg", "mean"),
@@ -61,9 +58,6 @@ monthly = (
          .round({"temp_avg": 2, "rad_avg": 4})
 )
 
-# Write to CSV
+# write to CSV
 monthly.to_csv(monthly_csv_out, index=False, float_format="%.4f")
 print(f"Monthly averages written to: {monthly_csv_out}")
-
-
-
