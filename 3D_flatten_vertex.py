@@ -1,4 +1,4 @@
-# FLATTEN SURFACES. 
+# flatten vertex data
 
 import os, json, csv, itertools
 from collections import OrderedDict
@@ -11,6 +11,7 @@ import concurrent.futures
 PAD_VALUE  = -1  # value when vertex/unit‑pair slot does not exist
 INDEXES = [6, 7, 8, 21]
 
+# paths
 ROOT_INPUT = Path(r"C:\thesis\CLEAN_WORKFLOW\4_data_struct_out\1_enrich_jsons\A1_base_2020")
 ROOT_OUTPUT = Path(r"C:\thesis\CLEAN_WORKFLOW\4_data_struct_out\3_flatten_feat")
 
@@ -75,7 +76,7 @@ def process_subfolder(idx):
         print(f"No files in {input_dir}")
         return
 
-    # Determine max dists/units for columns
+    # determine max dists/units for columns
     max_dists, max_units = scan_max_lengths(files)
 
     base_cols = [
@@ -87,14 +88,14 @@ def process_subfolder(idx):
         (f"ux{i+1}", f"uy{i+1}") for i in range(max_units)))
     header = base_cols + dist_cols + unit_cols
 
-    # Flatten in parallel, then concatenate all rows
+    # flatten in parallel, then concatenate all rows
     rows = []
     with concurrent.futures.ProcessPoolExecutor() as executor:
         for chunk in tqdm(executor.map(flatten_json, files, [max_dists]*len(files), [max_units]*len(files)),
                           total=len(files), desc=f"enrich_{idx} -> flat_vertex_{idx}"):
             rows.extend(chunk)
 
-    # Write CSV
+    # write CSV
     with open(csv_path, "w", newline="", encoding="utf-8") as f_csv:
         writer = csv.writer(f_csv)
         writer.writerow(header)
@@ -107,3 +108,4 @@ if __name__ == "__main__":
         print(f"Processing enrich_{idx} ...")
         process_subfolder(idx)
     print("All done.")
+
