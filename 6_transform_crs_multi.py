@@ -1,6 +1,7 @@
 import json, pathlib, re
 from concurrent.futures import ProcessPoolExecutor
 
+# files
 RAW_INT_DIR  = pathlib.Path(r"C:\thesis\0_data_collection_out\1_get_pandIDs\1B_pand_jsons_8")
 METERS_DIR   = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\5_filtered_jsons\filtered_jsons_8")
 OUT_DIR      = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\6_transform_jsons\transform_8")
@@ -69,3 +70,4 @@ if __name__ == "__main__":
         for result in executor.map(process_file, meters_files):
             print(result)
     print("DONE.")
+
