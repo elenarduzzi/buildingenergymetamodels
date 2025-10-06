@@ -2,7 +2,7 @@
 
 ## Predicting building energy performance at city-scale. 
 This repository contains the workflow developed for my MSc thesis project in Architecture, Urbanism and Building Sciences – Building Technology.
-The accompanying thesis report can be accessed from the TU Delft repository using the following link: 
+The accompanying thesis report can be accessed from the TU Delft repository using the following link:  
 https://repository.tudelft.nl/record/uuid:f91540ee-aa71-43f7-afb1-d0fbe0fa3c6c
 
 
