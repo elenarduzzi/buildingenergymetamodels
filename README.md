@@ -9,7 +9,7 @@ https://repository.tudelft.nl/record/uuid:f91540ee-aa71-43f7-afb1-d0fbe0fa3c6c
 ### Overview
 This study investigates the application of machine learning (ML) for predicting building energy performance at city scale. 
 The computational workflow is structured in two main stages: (i) large-scale building energy simulation and (ii) ML model development. 
-In part (i) the scripts were developed to automate data processing, energy simulation, and analysis for 20,000 residential buildings in Rotterdam, Netherlands. Energy simulations were modelled for both the present and two projected climate conditions. This EnergyPlus simulation datasets can be provided upon request.
+In part (i) the scripts were developed to automate data processing, energy simulation, and analysis for 20,000 residential buildings in Rotterdam, Netherlands. Energy simulations were modelled for both the present and two projected climate conditions. The EnergyPlus simulation datasets can be provided upon request.
 In part (ii) the scripts focus on structuring input features, developing and training a ML model, and evaluating model performance. 
 
 ### Repository Structure
