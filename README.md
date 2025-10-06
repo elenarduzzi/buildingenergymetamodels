@@ -22,10 +22,9 @@ In part (ii) the scripts focus on structuring input features, developing and tra
 
 #### ML Model Development
 
-4. Data Structure – Feature engineering, dataset structuring, and storage for ML input.
-5. ML Development – Neural network model training and validation (integrated with Weights & Biases).
-6. Performance – Model testing, error metrics, and scenario-based performance evaluation.
-
+4. Data Structure – Feature engineering and data structuring for ML input.
+5. ML Development – Developing and training an artificial neural network for energy demand prediction. 
+6. Performance – Model testing and performance evaluation. 
 
 ### Software & Environment Setup
 
