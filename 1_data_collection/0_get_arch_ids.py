@@ -1,12 +1,11 @@
 # takes input pand id and archetype data from excel and outputs to json
 
-from pathlib import Path
 import pandas as pd
 import json
 
 # paths 
-INPUT_EXCEL  = Path(r"C:\thesis\archetype_6.xlsx")
-OUTPUT_JSON = Path(r"C:\thesis\archetype_6.json")
+INPUT_EXCEL  = "archetype_6.xlsx"
+OUTPUT_JSON = "archetype_6.json"
 
 # select relevant columns
 df = pd.read_excel(INPUT_EXCEL)
