@@ -21,8 +21,8 @@ from tqdm import tqdm
 
 # paths
 
-INPUT_ROOT = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\3_formatted_nb_surface_json\nb_format_jsons_21")
-OUTPUT_ROOT = pathlib.Path(r"C:\thesis\CLEAN_WORKFLOW\2A_adjacency_out\4_label_adj_json\nb_type_jsons_21")
+INPUT_ROOT = pathlib.Path(r"C:\nb_format_jsons_21")
+OUTPUT_ROOT = pathlib.Path(r"C:\nb_type_jsons_21")
 OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
 
 # adjacency thresholds
