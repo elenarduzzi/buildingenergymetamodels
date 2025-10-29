@@ -26,8 +26,21 @@ log_file = Path(r"C:\idf_log_21.txt")
 # B1 retrofit / 2020 (ROTTERDAM BASE FILE)
 
 idd_path = Path(r"C:\EnergyPlusV24-2-0\Energy+.idd")
-materials_file_path = Path(r"C:\retrofit_NI.json")
-base_idf_path = Path(r"C:\rotterdam_base_file_2020.idf") # update weather data per scenario (2020, 2050, 2080)
+materials_file_path = Path(r"C:\retrofit_NI.json") 
+
+"""
+update base IDF file per scenario (2020, 2050, 2080)
+note the base IDF file is needed to add IDF objects to (cannot create new IDF file from scratch)
+
+inputs files:
+
+rotterdam_base_file_2020
+debilt_base_file_2050
+debilt_base_file_2080
+
+"""
+
+base_idf_path = Path(r"C:\rotterdam_base_file_2020.idf") 
 
 S3_BUCKET = ""  # leave empty to save locally 
 OUTPUT_PREFIX = "idf_files"

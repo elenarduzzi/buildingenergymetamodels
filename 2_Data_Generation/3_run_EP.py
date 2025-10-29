@@ -21,11 +21,7 @@ eplus_exe    = Path(r"C:\EnergyPlusV24-2-0\energyplus.exe")
 
 inputs files:
 
-Rotterdam:
-NLD_ZH_Rotterdam_TMY_2009-2023.epw"
-
-De Bilt:
-MET_DeBilt_TMY_2020.epw
+NLD_ZH_Rotterdam_TMY_2009-2023.epw
 MET_DeBilt_TMY_2050.epw
 MET_DeBilt_TMY_2080.epw
 
