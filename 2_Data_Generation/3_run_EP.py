@@ -15,14 +15,32 @@ log_file     = output_root / "ep_log_21.txt"
 
 eplus_exe    = Path(r"C:\EnergyPlusV24-2-0\energyplus.exe")
 
+
+"""
+# update epw weather file per scenario (2020, 2050, 2080)
+
+inputs files:
+
+Rotterdam:
+NLD_ZH_Rotterdam_TMY_2009-2023.epw"
+
+De Bilt:
+MET_DeBilt_TMY_2020.epw
+MET_DeBilt_TMY_2050.epw
+MET_DeBilt_TMY_2080.epw
+
+"""
 # B1 retrofit / 2020 (ROTTERDAM BASE FILE)
-epw_path     = Path(r"C:\NLD_ZH_Rotterdam.The.Hague.AP.063440_TMYx.2009-2023.epw") # update weather data per scenario (2020, 2050, 2080)
+
+epw_path     = Path(r"C:\NLD_ZH_Rotterdam_TMY_2009-2023.epw")
 
 output_root.mkdir(parents=True, exist_ok=True)
 
 
-"""ensure all files that are not .eso / .err.
-already implemted in IDF generation, but included as safety."""
+"""
+ensure all files that are not .eso / .err.
+already implemted in IDF generation, but included as safety.
+"""
 
 KEEP = {"eplusout.eso", "eplusout.err"}
 
