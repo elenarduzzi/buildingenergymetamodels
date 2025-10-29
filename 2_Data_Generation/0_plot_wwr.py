@@ -1,3 +1,8 @@
+"""
+plot buildings to verify correct geometries and surface labelling
+verify logic for assigning window objects
+"""
+
 import json
 from pathlib import Path
 import matplotlib.pyplot as plt
