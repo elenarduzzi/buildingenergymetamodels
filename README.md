@@ -30,5 +30,5 @@ In part (ii) the scripts focus on structuring input features, developing and tra
 
 •	Python: 3.13  
 • Editor/IDE: Developed in Visual Studio  
-• Energy simulation: Requires local EnergyPlus v9.6+ installation.  
-• ML training: uses Weights & Biases (wandb) for performance tracking and visualization.  
+• Energy simulation: EnergyPlus v24-2-0
+• ML training: uses Weights & Biases (wandb) for performance tracking and visualization 
